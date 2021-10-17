@@ -2,6 +2,7 @@
 # PM me on telegram your connection string, username and password
 from db import DB_PASSWORD, DB_USER, URL_LINK
 import pymongo
+from bson.objectid import ObjectId
 import datetime
 
 URL = URL_LINK.format(DB_USER, DB_PASSWORD)
@@ -30,7 +31,7 @@ data["orderDate"] = datetime.datetime.utcnow()
 # Read
 
 ###
-# Retrieve the 5th-10th largest transactions
+# Retrieve the 5th-10th largest transactions inclusive
 ###
 
 cursor1 = db.orders.find().sort("amount", pymongo.DESCENDING).skip(4).limit(6)
@@ -43,7 +44,13 @@ cursor1 = db.orders.find().sort("amount", pymongo.DESCENDING).skip(4).limit(6)
 # Update orders with status (Complete/Failed) and orderDate (after a specific date), update status to (Dispute)
 ###
 
+myDate = datetime.datetime(2021,10,5,0,0,0)
+filter_con = {"$and": [ \
+    {"status": {"$in": ["Completed", "Failed"]} }, \
+    {"orderDate": {"$gt" :myDate}}]}
 
+result2 = db.orders.update_many(filter_con, {"$set" : {"status" : "Dispute"}})
+print(result2.modified_count)
 
 # Delete
 
@@ -51,3 +58,6 @@ cursor1 = db.orders.find().sort("amount", pymongo.DESCENDING).skip(4).limit(6)
 # Delete all orders with a specific orderID
 ###
 
+orderID = "616bca88b871f21057a92485"
+result3 = db.orders.delete_one({"_id": ObjectId(orderID)})
+print(result3.deleted_count)
